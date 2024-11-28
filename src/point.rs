@@ -1,154 +1,166 @@
-use std::cmp;
-use std::fmt;
-use std::ops;
+#![allow(dead_code)]
 
-macro_rules! define_point {
-    ($Point:ident, $T:ty) => {
-        #[allow(dead_code)]
-        #[derive(Debug, Eq, PartialEq, PartialOrd, Ord, Clone, Copy, Hash)]
-        pub struct $Point {
-            pub x: $T,
-            pub y: $T,
-        }
+use std::cmp::{max, Ord};
+use std::fmt::{Display, Formatter, Result};
+use std::ops::{Add, AddAssign, Sub, SubAssign, Mul, MulAssign, Div, DivAssign};
 
-        //================================================================
-        // Printing
-        //================================================================
-
-        impl fmt::Display for $Point {
-            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                write!(f, "({}, {})", self.x, self.y)
-            }
-        }
-
-        //================================================================
-        // Operator overlaods
-        //================================================================
-
-        impl ops::Add for $Point {
-            type Output = $Point;
-
-            fn add(self, rhs: $Point) -> $Point {
-                $Point { x: self.x + rhs.x, y: self.y + rhs.y }
-            }
-        }
-
-        impl ops::Sub for $Point {
-            type Output = $Point;
-
-            fn sub(self, rhs: $Point) -> $Point {
-                $Point { x: self.x - rhs.x, y: self.y - rhs.y }
-            }
-        }
-
-        impl ops::Mul<$T> for $Point {
-            type Output = $Point;
-
-            fn mul(self, rhs: $T) -> $Point {
-                $Point { x: self.x * rhs, y: self.y * rhs }
-            }
-        }
-
-        impl ops::Div<$T> for $Point {
-            type Output = $Point;
-
-            fn div(self, rhs: $T) -> $Point {
-                if rhs == 0 { panic!("Cannot divide by zero!"); }
-                $Point { x: self.x / rhs, y: self.y / rhs }
-            }
-        }
-
-        impl ops::AddAssign for $Point {
-            fn add_assign(&mut self, rhs: $Point) {
-                *self = $Point { x: self.x + rhs.x, y: self.y + rhs.y };
-            }
-        }
-
-        impl ops::SubAssign for $Point {
-            fn sub_assign(&mut self, rhs: $Point) {
-                *self = $Point { x: self.x - rhs.x, y: self.y - rhs.y };
-            }
-        }
-
-        impl ops::MulAssign<$T> for $Point {
-            fn mul_assign(&mut self, rhs: $T) {
-                *self = $Point { x: self.x * rhs, y: self.y * rhs }
-            }
-        }
-
-        impl ops::DivAssign<$T> for $Point {
-            fn div_assign(&mut self, rhs: $T) {
-                if rhs == 0 { panic!("Cannot divide by zero!"); }
-                *self = $Point { x: self.x / rhs, y: self.y / rhs }
-            }
-        }
-
-        //================================================================
-        // Move in direction & get neighbours
-        //================================================================
-
-        #[allow(dead_code)]
-        impl $Point {
-            fn move_up(&mut self) {
-                self.y -= 1 as $T;
-            }
-
-            fn move_down(&mut self) {
-                self.y += 1 as $T;
-            }
-
-            fn move_left(&mut self) {
-                self.x -= 1 as $T;
-            }
-
-            fn move_right(&mut self) {
-                self.x += 1 as $T;
-            }
-
-            fn up(&self) -> $Point {
-                $Point { x: self.x, y: self.y - 1 as $T }
-            }
-
-            fn down(&self) -> $Point {
-                $Point { x: self.x, y: self.y + 1 as $T }
-            }
-            
-            fn left(&self) -> $Point {
-                $Point { x: self.x - 1 as $T, y: self.y }
-            }
-            
-            fn right(&self) -> $Point {
-                $Point { x: self.x + 1 as $T, y: self.y }
-            }    
-        }
-
-        //================================================================
-        // Other related functions
-        //================================================================
-
-        #[allow(dead_code)]
-        impl $Point {
-            // cardinal distance (diagonal movement is longer)
-            fn manhattan(lhs: &$Point, rhs: &$Point) -> $T {
-                (rhs.x - lhs.x).abs() + (rhs.y - lhs.y).abs()
-            }
-
-            // diagonal distance equal to cardinal
-            fn chebyshev(lhs: &$Point, rhs: &$Point) -> $T {
-                cmp::max((rhs.x - lhs.x).abs(), (rhs.y - lhs.y).abs())
-            }
-        }
-    };
+#[derive(Debug, Eq, PartialEq, PartialOrd, Ord, Clone, Copy, Hash)]
+pub struct Point<T> {
+    pub x: T,
+    pub y: T,
 }
 
-define_point!(PointI32, i32);
-define_point!(PointI64, i64);
-define_point!(PointI128, i128);
+//================================================================
+// Printing
+//================================================================
+
+impl<T: Display> Display for Point<T> {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        write!(f, "({}, {})", self.x, self.y)
+    }
+}
+
+//================================================================
+// Operator overlaods
+//================================================================
+
+impl<T: Add<Output = T>> Add for Point<T> {
+    type Output = Point<T>;
+
+    fn add(self, rhs: Point<T>) -> Point<T> {
+        Point { x: self.x + rhs.x, y: self.y + rhs.y }
+    }
+}
+
+impl<T: Sub<Output = T>> Sub for Point<T> {
+    type Output = Point<T>;
+
+    fn sub(self, rhs: Point<T>) -> Point<T> {
+        Point { x: self.x - rhs.x, y: self.y - rhs.y }
+    }
+}
+
+impl<T: Mul<U, Output = T>, U: Copy> Mul<U> for Point<T> {
+    type Output = Point<T>;
+
+    fn mul(self, rhs: U) -> Point<T> {
+        Point { x: self.x * rhs, y: self.y * rhs }
+    }
+}
+
+impl<T: Div<U, Output = T>, U: Copy + PartialEq + From<i32>> Div<U> for Point<T> {
+    type Output = Point<T>;
+
+    fn div(self, rhs: U) -> Point<T> {
+        if rhs == U::from(0) { panic!("Cannot divide by zero!"); }
+        Point { x: self.x / rhs, y: self.y / rhs }
+    }
+}
+
+impl<T: AddAssign> AddAssign for Point<T> {
+    fn add_assign(&mut self, rhs: Point<T>) {
+        self.x += rhs.x;
+        self.y += rhs.y;
+    }
+}
+
+impl<T: SubAssign> SubAssign for Point<T> {
+    fn sub_assign(&mut self, rhs: Point<T>) {
+        self.x -= rhs.x;
+        self.y -= rhs.y;
+    }
+}
+
+impl<T: MulAssign<U>, U: Copy> MulAssign<U> for Point<T> {
+    fn mul_assign(&mut self, rhs: U) {
+        self.x *= rhs;
+        self.y *= rhs;
+    }
+}
+
+impl<T: DivAssign<U>, U: Copy + PartialEq + From<i32>> DivAssign<U> for Point<T> {
+    fn div_assign(&mut self, rhs: U) {
+        if rhs == U::from(0) { panic!("Cannot divide by zero!"); }
+        self.x /= rhs;
+        self.y /= rhs;
+    }
+}
+
+//================================================================
+// Move in direction & get neighbours
+//================================================================
+
+impl<T: AddAssign + SubAssign + From<i32>> Point<T> {
+    pub fn move_up(&mut self) {
+        self.y -= T::from(1);
+    }
+
+    pub fn move_down(&mut self) {
+        self.y += T::from(1);
+    }
+
+    pub fn move_left(&mut self) {
+        self.x -= T::from(1);
+    }
+
+    pub fn move_right(&mut self) {
+        self.x += T::from(1);
+    }
+}
+
+impl<T: Add<Output = T> + Sub<Output = T> + From<i32> + Copy> Point<T> {
+    pub fn up(&self) -> Point<T> {
+        Point { x: self.x, y: self.y - T::from(1) }
+    }
+
+    pub fn down(&self) -> Point<T> {
+        Point { x: self.x, y: self.y + T::from(1) }
+    }
+    
+    pub fn left(&self) -> Point<T> {
+        Point { x: self.x - T::from(1), y: self.y }
+    }
+    
+    pub fn right(&self) -> Point<T> {
+        Point { x: self.x + T::from(1), y: self.y }
+    }    
+}
+
+//================================================================
+// Other related functions
+//================================================================
+
+pub trait Abs {
+    fn abs(self) -> Self;
+}
+
+macro_rules! define_abs {
+    ($($T:ty),*) => {
+        $(
+            impl Abs for $T {
+                fn abs(self) -> Self {
+                    if self < 0 { -self }
+                    else        {  self }
+                }
+            }
+        )*
+    }
+}
+
+define_abs!(i32, i64, i128);
+
+// cardinal distance (diagonal movement is longer)
+pub fn manhattan<T: Sub<Output = T> + Add<Output = T> + Copy + Abs>(lhs: &Point<T>, rhs: &Point<T>) -> T {
+    (rhs.x - lhs.x).abs() + (rhs.y - lhs.y).abs()
+}
+
+pub fn chebyshev<T: Sub<Output = T> + Add<Output = T> + Copy + Ord + Abs>(lhs: &Point<T>, rhs: &Point<T>) -> T {
+    max((rhs.x - lhs.x).abs(), (rhs.y - lhs.y).abs())
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    type Point = PointI32;
 
     // Much of these tests are really only checking that I've understood
     // how to implement thigns correctly. They're also just to try using
@@ -284,4 +296,23 @@ mod tests {
         assert_eq!(p1, result);
     }
 
+    #[test]
+    fn point_manhattan() {
+        let p1 = Point { x: 1, y: 2};
+        let p2 = Point { x: 3, y: 4};
+        let p3 = Point { x: -3, y: -4 };
+
+        assert_eq!(manhattan(&p1, &p2), 4);
+        assert_eq!(manhattan(&p1, &p3), 10);
+    }
+
+    #[test]
+    fn point_chebyshev() {
+        let p1 = Point { x: 1, y: 2};
+        let p2 = Point { x: 3, y: 5};
+        let p3 = Point { x: -3, y: -5 };
+
+        assert_eq!(chebyshev(&p1, &p2), 3);
+        assert_eq!(chebyshev(&p1, &p3), 7);
+    }
 }
