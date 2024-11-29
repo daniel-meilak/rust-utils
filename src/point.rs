@@ -135,19 +135,18 @@ pub trait Abs {
 }
 
 macro_rules! define_abs {
-    ($($T:ty),*) => {
-        $(
-            impl Abs for $T {
-                fn abs(self) -> Self {
-                    if self < 0 { -self }
-                    else        {  self }
-                }
+    ($T:ty) => {
+        impl Abs for $T {
+            fn abs(self) -> Self {
+                self.abs()
             }
-        )*
+        }
     }
 }
 
-define_abs!(i32, i64, i128);
+define_abs!(i32);
+define_abs!(i64);
+define_abs!(i128);
 
 // cardinal distance (diagonal movement is longer)
 pub fn manhattan<T: Sub<Output = T> + Add<Output = T> + Copy + Abs>(lhs: &Point<T>, rhs: &Point<T>) -> T {
