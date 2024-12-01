@@ -2,7 +2,7 @@
 
 use std::cmp::{max, Ord};
 use std::fmt::{Display, Formatter, Result};
-use std::ops::{Add, AddAssign, Sub, SubAssign, Mul, MulAssign, Div, DivAssign};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
 #[derive(Debug, Eq, PartialEq, PartialOrd, Ord, Clone, Copy, Hash)]
 pub struct Point<T> {
@@ -28,7 +28,10 @@ impl<T: Add<Output = T>> Add for Point<T> {
     type Output = Point<T>;
 
     fn add(self, rhs: Point<T>) -> Point<T> {
-        Point { x: self.x + rhs.x, y: self.y + rhs.y }
+        Point {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+        }
     }
 }
 
@@ -36,7 +39,10 @@ impl<T: Sub<Output = T>> Sub for Point<T> {
     type Output = Point<T>;
 
     fn sub(self, rhs: Point<T>) -> Point<T> {
-        Point { x: self.x - rhs.x, y: self.y - rhs.y }
+        Point {
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+        }
     }
 }
 
@@ -44,7 +50,10 @@ impl<T: Mul<U, Output = T>, U: Copy> Mul<U> for Point<T> {
     type Output = Point<T>;
 
     fn mul(self, rhs: U) -> Point<T> {
-        Point { x: self.x * rhs, y: self.y * rhs }
+        Point {
+            x: self.x * rhs,
+            y: self.y * rhs,
+        }
     }
 }
 
@@ -52,8 +61,13 @@ impl<T: Div<U, Output = T>, U: Copy + PartialEq + From<i32>> Div<U> for Point<T>
     type Output = Point<T>;
 
     fn div(self, rhs: U) -> Point<T> {
-        if rhs == U::from(0) { panic!("Cannot divide by zero!"); }
-        Point { x: self.x / rhs, y: self.y / rhs }
+        if rhs == U::from(0) {
+            panic!("Cannot divide by zero!");
+        }
+        Point {
+            x: self.x / rhs,
+            y: self.y / rhs,
+        }
     }
 }
 
@@ -80,7 +94,9 @@ impl<T: MulAssign<U>, U: Copy> MulAssign<U> for Point<T> {
 
 impl<T: DivAssign<U>, U: Copy + PartialEq + From<i32>> DivAssign<U> for Point<T> {
     fn div_assign(&mut self, rhs: U) {
-        if rhs == U::from(0) { panic!("Cannot divide by zero!"); }
+        if rhs == U::from(0) {
+            panic!("Cannot divide by zero!");
+        }
         self.x /= rhs;
         self.y /= rhs;
     }
@@ -110,20 +126,32 @@ impl<T: AddAssign + SubAssign + From<i32>> Point<T> {
 
 impl<T: Add<Output = T> + Sub<Output = T> + From<i32> + Copy> Point<T> {
     pub fn up(&self) -> Point<T> {
-        Point { x: self.x, y: self.y - T::from(1) }
+        Point {
+            x: self.x,
+            y: self.y - T::from(1),
+        }
     }
 
     pub fn down(&self) -> Point<T> {
-        Point { x: self.x, y: self.y + T::from(1) }
+        Point {
+            x: self.x,
+            y: self.y + T::from(1),
+        }
     }
-    
+
     pub fn left(&self) -> Point<T> {
-        Point { x: self.x - T::from(1), y: self.y }
+        Point {
+            x: self.x - T::from(1),
+            y: self.y,
+        }
     }
-    
+
     pub fn right(&self) -> Point<T> {
-        Point { x: self.x + T::from(1), y: self.y }
-    }    
+        Point {
+            x: self.x + T::from(1),
+            y: self.y,
+        }
+    }
 }
 
 //================================================================
@@ -141,7 +169,7 @@ macro_rules! define_abs {
                 self.abs()
             }
         }
-    }
+    };
 }
 
 define_abs!(i32);
@@ -149,11 +177,17 @@ define_abs!(i64);
 define_abs!(i128);
 
 // cardinal distance (diagonal movement is longer)
-pub fn manhattan<T: Sub<Output = T> + Add<Output = T> + Copy + Abs>(lhs: &Point<T>, rhs: &Point<T>) -> T {
+pub fn manhattan<T>(lhs: &Point<T>, rhs: &Point<T>) -> T
+where
+    T: Sub<Output = T> + Add<Output = T> + Copy + Abs,
+{
     (rhs.x - lhs.x).abs() + (rhs.y - lhs.y).abs()
 }
 
-pub fn chebyshev<T: Sub<Output = T> + Add<Output = T> + Copy + Ord + Abs>(lhs: &Point<T>, rhs: &Point<T>) -> T {
+pub fn chebyshev<T>(lhs: &Point<T>, rhs: &Point<T>) -> T
+where
+    T: Sub<Output = T> + Add<Output = T> + Copy + Ord + Abs,
+{
     max((rhs.x - lhs.x).abs(), (rhs.y - lhs.y).abs())
 }
 
@@ -177,7 +211,7 @@ mod tests {
         let p2 = Point { x: 1, y: 2 };
         let p3 = Point { x: 2, y: 2 };
         let p4 = Point { x: 2, y: 1 };
-        
+
         assert_eq!(p1, p2);
         assert_ne!(p1, p3);
         assert_ne!(p1, p4);
@@ -202,11 +236,11 @@ mod tests {
         let mut p1 = Point { x: 1, y: 2 };
         let p2 = Point { x: 3, y: 4 };
         let p3 = Point { x: 4, y: 6 };
-        
+
         assert_eq!(p1 + p2, p3);
         assert_eq!(p1 + p2, p2 + p1);
-        
-        p1 += p2; 
+
+        p1 += p2;
         assert_eq!(p1, p3);
     }
 
@@ -253,7 +287,7 @@ mod tests {
         let up = Point { x: 0, y: -1 };
         let result = p1 + up;
 
-        assert_eq!(p1.up() , result);
+        assert_eq!(p1.up(), result);
 
         p1.move_up();
         assert_eq!(p1, result);
@@ -265,7 +299,7 @@ mod tests {
         let down = Point { x: 0, y: 1 };
         let result = p1 + down;
 
-        assert_eq!(p1.down() , result);
+        assert_eq!(p1.down(), result);
 
         p1.move_down();
         assert_eq!(p1, result);
@@ -277,7 +311,7 @@ mod tests {
         let left = Point { x: -1, y: 0 };
         let result = p1 + left;
 
-        assert_eq!(p1.left() , result);
+        assert_eq!(p1.left(), result);
 
         p1.move_left();
         assert_eq!(p1, result);
@@ -289,7 +323,7 @@ mod tests {
         let right = Point { x: 1, y: 0 };
         let result = p1 + right;
 
-        assert_eq!(p1.right() , result);
+        assert_eq!(p1.right(), result);
 
         p1.move_right();
         assert_eq!(p1, result);
@@ -297,8 +331,8 @@ mod tests {
 
     #[test]
     fn point_manhattan() {
-        let p1 = Point { x: 1, y: 2};
-        let p2 = Point { x: 3, y: 4};
+        let p1 = Point { x: 1, y: 2 };
+        let p2 = Point { x: 3, y: 4 };
         let p3 = Point { x: -3, y: -4 };
 
         assert_eq!(manhattan(&p1, &p2), 4);
@@ -307,8 +341,8 @@ mod tests {
 
     #[test]
     fn point_chebyshev() {
-        let p1 = Point { x: 1, y: 2};
-        let p2 = Point { x: 3, y: 5};
+        let p1 = Point { x: 1, y: 2 };
+        let p2 = Point { x: 3, y: 5 };
         let p3 = Point { x: -3, y: -5 };
 
         assert_eq!(chebyshev(&p1, &p2), 3);
