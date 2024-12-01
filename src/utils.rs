@@ -56,28 +56,34 @@ pub fn split_2d_input(file_name: &str, regex_pattern: &str) -> Vec<Vec<String>> 
 // Convert to integers
 //================================================================
 
-pub fn to_numeric<T>(input: &[&str]) -> Vec<T>
+pub fn to_numeric<S, T>(input: &[S]) -> Vec<T>
 where
+    S: AsRef<str>,
     T: FromStr,
     T::Err: Debug,
 {
     input
         .iter()
-        .map(|s| s.parse::<T>().expect("Failed to parse string as integer"))
+        .map(|s| {
+            s.as_ref()
+                .parse::<T>()
+                .expect("Failed to parse string as integer")
+        })
         .collect()
 }
 
-pub fn to_2d_numeric<'a, A, B, T>(input: A) -> Vec<Vec<T>>
+pub fn to_2d_numeric<A, B, S, T>(input: A) -> Vec<Vec<T>>
 where
     A: AsRef<[B]>,
-    B: AsRef<[&'a str]>,
+    B: AsRef<[S]>,
+    S: AsRef<str>,
     T: FromStr,
     T::Err: Debug,
 {
     input
         .as_ref()
         .iter()
-        .map(|v| to_numeric::<T>(v.as_ref()))
+        .map(|v| to_numeric::<S, T>(v.as_ref()))
         .collect()
 }
 
@@ -215,11 +221,15 @@ mod tests {
     #[test]
     fn numeric_conversions() {
         assert_eq!(
-            to_numeric::<i32>(&SPLIT_SINGLE_LINE),
+            to_numeric::<&str, i32>(&SPLIT_SINGLE_LINE),
             NUMERIC_SINGLE_LINE.to_vec()
         );
         assert_eq!(
-            to_2d_numeric::<&[&[&str]], &[&str], i32>(&[&["1", "1"], &["2", "2"], &["3", "3"]]),
+            to_2d_numeric::<&[&[&str]], &[&str], &str, i32>(&[
+                &["1", "1"],
+                &["2", "2"],
+                &["3", "3"]
+            ]),
             &[vec![1, 1], vec![2, 2], vec![3, 3]]
         );
     }
