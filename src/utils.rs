@@ -109,7 +109,12 @@ where
     grid.as_ref()[n].as_ref().iter().copied().sum()
 }
 
-pub fn min_column<A: AsRef<[B]>, B: AsRef<[T]>, T: Ord + Copy>(grid: A, n: usize) -> T {
+pub fn min_column<A, B, T>(grid: A, n: usize) -> T
+where
+    A: AsRef<[B]>,
+    B: AsRef<[T]>,
+    T: Ord + Copy
+{
     grid.as_ref()
         .iter()
         .map(|row| row.as_ref()[n])
@@ -117,7 +122,12 @@ pub fn min_column<A: AsRef<[B]>, B: AsRef<[T]>, T: Ord + Copy>(grid: A, n: usize
         .expect("Cannot find minimum of empty array")
 }
 
-pub fn max_column<A: AsRef<[B]>, B: AsRef<[T]>, T: Ord + Copy>(grid: A, n: usize) -> T {
+pub fn max_column<A, B, T>(grid: A, n: usize) -> T
+where
+    A: AsRef<[B]>,
+    B: AsRef<[T]>,
+    T: Ord + Copy
+{
     grid.as_ref()
         .iter()
         .map(|row| row.as_ref()[n])
@@ -125,7 +135,12 @@ pub fn max_column<A: AsRef<[B]>, B: AsRef<[T]>, T: Ord + Copy>(grid: A, n: usize
         .expect("Cannot find maximum of empty array")
 }
 
-pub fn min_row<A: AsRef<[B]>, B: AsRef<[T]>, T: Ord + Copy>(grid: A, n: usize) -> T {
+pub fn min_row<A, B, T>(grid: A, n: usize) -> T
+where
+    A: AsRef<[B]>,
+    B: AsRef<[T]>,
+    T: Ord + Copy
+{
     grid.as_ref()[n]
         .as_ref()
         .iter()
@@ -134,13 +149,42 @@ pub fn min_row<A: AsRef<[B]>, B: AsRef<[T]>, T: Ord + Copy>(grid: A, n: usize) -
         .expect("Cannot find minimum of empty array")
 }
 
-pub fn max_row<A: AsRef<[B]>, B: AsRef<[T]>, T: Ord + Copy>(grid: A, n: usize) -> T {
+pub fn max_row<A, B, T>(grid: A, n: usize) -> T
+where
+    A: AsRef<[B]>,
+    B: AsRef<[T]>,
+    T: Ord + Copy
+{
     grid.as_ref()[n]
         .as_ref()
         .iter()
         .copied()
         .max()
         .expect("Cannot find maximum of empty array")
+}
+
+pub fn rotate<A, B, T>(grid: A) -> Vec<Vec<T>>
+where
+    A: AsRef<[B]>,
+    B: AsRef<[T]>,
+    T: Copy
+{
+    let max_column_size = grid
+        .as_ref()
+        .iter()
+        .map(|row| row.as_ref().len())
+        .max()
+        .unwrap_or(0);
+
+    let mut rotated: Vec<Vec<T>> = vec![Vec::new(); max_column_size];
+
+    for row in grid.as_ref() {
+        for (i, &element) in row.as_ref().iter().enumerate() {
+            rotated[i].push(element);
+        }
+    }
+
+    rotated
 }
 
 //================================================================
@@ -256,6 +300,13 @@ mod tests {
 
         assert_eq!(min_row(grid, 0), 1);
         assert_eq!(max_row(grid, 0), 2);
+    }
+
+    #[test]
+    fn grid_rotate() {
+        let grid = &[&[1, 2, 3], &[4, 5, 6], &[7, 8, 9]];
+
+        assert_eq!(rotate(grid), vec![vec![1,4,7],vec![2,5,8],vec![3,6,9]])
     }
 
     #[test]
