@@ -21,6 +21,15 @@ pub fn split_by_regex(input: &str, regex_pattern: &str) -> Vec<String> {
     regex.split(input).map(|s| s.to_string()).collect()
 }
 
+pub fn split_2d_by_regex(input: &str, regex_pattern: &str) -> Vec<Vec<String>> {
+    let regex = Regex::new(regex_pattern).expect("Failed to parse regex pattern");
+
+    input
+        .lines()
+        .map(|line| regex.split(line).map(|s| s.to_string()).collect())
+        .collect()
+}
+
 //================================================================
 // Read, split & filter input file contents
 //================================================================
@@ -40,10 +49,7 @@ pub fn split_input(file_name: &str, regex_pattern: &str) -> Vec<String> {
 pub fn split_2d_input(file_name: &str, regex_pattern: &str) -> Vec<Vec<String>> {
     let contents = read_to_string(file_name).expect("Failed to read from input file");
 
-    contents
-        .lines()
-        .map(|line| split_by_regex(line, regex_pattern))
-        .collect()
+    split_2d_by_regex(&contents, regex_pattern)
 }
 
 //================================================================
