@@ -1,4 +1,5 @@
 use core::fmt::Debug;
+use std::result;
 use regex::Regex;
 use std::fs::read_to_string;
 use std::iter::Sum;
@@ -187,6 +188,24 @@ where
     rotated
 }
 
+pub fn pad(input: &str, filler: char) -> Vec<String> {
+    let lines: Vec<&str> = input.lines().collect();
+
+    let padded_lines: Vec<String> = lines
+        .iter()
+        .map(|line| format!("{}{}{}", filler, line, filler))
+        .collect();
+
+    let border_width = padded_lines[0].len();
+    let border: String = std::iter::repeat(filler).take(border_width).collect();
+
+    let mut result = vec![border.clone()];
+    result.extend(padded_lines);
+    result.push(border);
+
+    result
+}
+
 //================================================================
 // Other utilities
 //================================================================
@@ -316,5 +335,10 @@ mod tests {
 
         assert_eq!(modulus(a, 5), 2);
         assert_eq!(modulus(b, 5), 3);
+    }
+
+    #[test]
+    fn padding() {
+        assert_eq!(pad("aa\naa", '#'), vec!["####","#aa#","#aa#","####"]);
     }
 }
