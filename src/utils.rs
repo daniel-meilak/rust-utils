@@ -188,16 +188,21 @@ where
     rotated
 }
 
-pub fn pad(input: &str, filler: char) -> Vec<String> {
+pub fn pad(input: &str, filler: char) -> Vec<Vec<char>> {
     let lines: Vec<&str> = input.lines().collect();
 
-    let padded_lines: Vec<String> = lines
+    let padded_lines: Vec<Vec<char>> = lines
         .iter()
-        .map(|line| format!("{}{}{}", filler, line, filler))
+        .map(|line| {
+            let mut chars: Vec<char> = line.chars().collect();
+            chars.insert(0, filler); // Add 'X' at the beginning
+            chars.push(filler); // Add 'X' at the end
+            chars
+        })
         .collect();
 
     let border_width = padded_lines[0].len();
-    let border: String = std::iter::repeat(filler).take(border_width).collect();
+    let border: Vec<char> = std::iter::repeat(filler).take(border_width).collect();
 
     let mut result = vec![border.clone()];
     result.extend(padded_lines);
