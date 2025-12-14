@@ -1,5 +1,4 @@
-#![allow(dead_code)]
-
+use num_traits::{One, Signed, Unsigned, Zero};
 use std::cmp::{max, Ord};
 use std::fmt::{Display, Formatter, Result};
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
@@ -8,6 +7,18 @@ use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 pub struct Point<T> {
     pub x: T,
     pub y: T,
+}
+
+impl<T> Point<T> {
+    pub fn new(x: T, y: T) -> Self {
+        Point { x, y }
+    }
+}
+
+impl<T: Default> Default for Point<T> {
+    fn default() -> Self {
+        Point::new(T::default(), T::default())
+    }
 }
 
 //================================================================
@@ -21,17 +32,14 @@ impl<T: Display> Display for Point<T> {
 }
 
 //================================================================
-// Operator overlaods
+// Operator overloads
 //================================================================
 
 impl<T: Add<Output = T>> Add for Point<T> {
     type Output = Point<T>;
 
     fn add(self, rhs: Point<T>) -> Point<T> {
-        Point {
-            x: self.x + rhs.x,
-            y: self.y + rhs.y,
-        }
+        Point::new(self.x + rhs.x, self.y + rhs.y)
     }
 }
 
@@ -39,10 +47,7 @@ impl<T: Sub<Output = T>> Sub for Point<T> {
     type Output = Point<T>;
 
     fn sub(self, rhs: Point<T>) -> Point<T> {
-        Point {
-            x: self.x - rhs.x,
-            y: self.y - rhs.y,
-        }
+        Point::new(self.x - rhs.x, self.y - rhs.y)
     }
 }
 
@@ -50,24 +55,19 @@ impl<T: Mul<U, Output = T>, U: Copy> Mul<U> for Point<T> {
     type Output = Point<T>;
 
     fn mul(self, rhs: U) -> Point<T> {
-        Point {
-            x: self.x * rhs,
-            y: self.y * rhs,
-        }
+        Point::new(self.x * rhs, self.y * rhs)
     }
 }
 
-impl<T: Div<U, Output = T>, U: Copy + PartialEq + From<i32>> Div<U> for Point<T> {
+impl<T: Div<U, Output = T>, U: Copy + PartialEq + Zero> Div<U> for Point<T> {
     type Output = Point<T>;
 
     fn div(self, rhs: U) -> Point<T> {
-        if rhs == U::from(0) {
+        if rhs == U::zero() {
             panic!("Cannot divide by zero!");
         }
-        Point {
-            x: self.x / rhs,
-            y: self.y / rhs,
-        }
+
+        Point::new(self.x / rhs, self.y / rhs)
     }
 }
 
@@ -92,11 +92,12 @@ impl<T: MulAssign<U>, U: Copy> MulAssign<U> for Point<T> {
     }
 }
 
-impl<T: DivAssign<U>, U: Copy + PartialEq + From<i32>> DivAssign<U> for Point<T> {
+impl<T: DivAssign<U>, U: Copy + PartialEq + Zero> DivAssign<U> for Point<T> {
     fn div_assign(&mut self, rhs: U) {
-        if rhs == U::from(0) {
+        if rhs == U::zero() {
             panic!("Cannot divide by zero!");
         }
+
         self.x /= rhs;
         self.y /= rhs;
     }
@@ -106,51 +107,45 @@ impl<T: DivAssign<U>, U: Copy + PartialEq + From<i32>> DivAssign<U> for Point<T>
 // Move in direction & get neighbours
 //================================================================
 
-impl<T: AddAssign + SubAssign + From<i32>> Point<T> {
+impl<T: AddAssign + SubAssign + One> Point<T> {
     pub fn move_up(&mut self) {
-        self.y -= T::from(1);
+        self.y -= T::one();
     }
 
     pub fn move_down(&mut self) {
-        self.y += T::from(1);
+        self.y += T::one();
     }
 
     pub fn move_left(&mut self) {
-        self.x -= T::from(1);
+        self.x -= T::one();
     }
 
     pub fn move_right(&mut self) {
-        self.x += T::from(1);
+        self.x += T::one();
     }
 }
 
-impl<T: Add<Output = T> + Sub<Output = T> + From<i32> + Copy> Point<T> {
+impl<T: Add<Output = T> + Sub<Output = T> + One + Copy> Point<T> {
     pub fn up(&self) -> Point<T> {
-        Point {
-            x: self.x,
-            y: self.y - T::from(1),
-        }
+        Point::new(self.x, self.y - T::one())
     }
 
     pub fn down(&self) -> Point<T> {
-        Point {
-            x: self.x,
-            y: self.y + T::from(1),
-        }
+        Point::new(self.x, self.y + T::one())
     }
 
     pub fn left(&self) -> Point<T> {
-        Point {
-            x: self.x - T::from(1),
-            y: self.y,
-        }
+        Point::new(self.x - T::one(), self.y)
     }
 
     pub fn right(&self) -> Point<T> {
-        Point {
-            x: self.x + T::from(1),
-            y: self.y,
-        }
+        Point::new(self.x + T::one(), self.y)
+    }
+}
+
+impl<T: Add<Output = T> + Sub<Output = T> + One + Copy> Point<T> {
+    pub fn neighbors(&self) -> [Point<T>; 4] {
+        [self.up(), self.down(), self.left(), self.right()]
     }
 }
 
@@ -158,37 +153,57 @@ impl<T: Add<Output = T> + Sub<Output = T> + From<i32> + Copy> Point<T> {
 // Other related functions
 //================================================================
 
-pub trait Abs {
-    fn abs(self) -> Self;
-}
-
-macro_rules! define_abs {
-    ($T:ty) => {
-        impl Abs for $T {
-            fn abs(self) -> Self {
-                self.abs()
-            }
-        }
-    };
-}
-
-define_abs!(i32);
-define_abs!(i64);
-define_abs!(i128);
-
 // cardinal distance (diagonal movement is longer)
 pub fn manhattan<T>(lhs: &Point<T>, rhs: &Point<T>) -> T
 where
-    T: Sub<Output = T> + Add<Output = T> + Copy + Abs,
+    T: Sub<Output = T> + Add<Output = T> + Copy + Signed,
 {
     (rhs.x - lhs.x).abs() + (rhs.y - lhs.y).abs()
 }
 
+pub fn manhattan_unsigned<T>(lhs: &Point<T>, rhs: &Point<T>) -> T
+where
+    T: Sub<Output = T> + Add<Output = T> + Copy + Ord,
+{
+    let dx = if rhs.x > lhs.x {
+        rhs.x - lhs.x
+    } else {
+        lhs.x - rhs.x
+    };
+
+    let dy = if rhs.y > lhs.y {
+        rhs.y - lhs.y
+    } else {
+        lhs.y - rhs.y
+    };
+
+    dx + dy
+}
+
 pub fn chebyshev<T>(lhs: &Point<T>, rhs: &Point<T>) -> T
 where
-    T: Sub<Output = T> + Add<Output = T> + Copy + Ord + Abs,
+    T: Sub<Output = T> + Add<Output = T> + Copy + Ord + Signed,
 {
     max((rhs.x - lhs.x).abs(), (rhs.y - lhs.y).abs())
+}
+
+pub fn chebyshev_unsigned<T>(lhs: &Point<T>, rhs: &Point<T>) -> T
+where
+    T: Sub<Output = T> + Copy + Ord,
+{
+    let dx = if rhs.x > lhs.x {
+        rhs.x - lhs.x
+    } else {
+        lhs.x - rhs.x
+    };
+
+    let dy = if rhs.y > lhs.y {
+        rhs.y - lhs.y
+    } else {
+        lhs.y - rhs.y
+    };
+
+    max(dx, dy)
 }
 
 #[cfg(test)]
@@ -196,21 +211,26 @@ mod tests {
     use super::*;
 
     // Much of these tests are really only checking that I've understood
-    // how to implement thigns correctly. They're also just to try using
+    // how to implement things correctly. They're also just to try using
     // the struct, and to get used to writing tests in rust.
 
     #[test]
     fn point_print() {
-        let p = Point { x: 1, y: 2 };
-        assert_eq!(p.to_string(), "(1, 2)");
+        let a = Point::new(1u32, 2u32);
+        let b = Point::new(1, 2);
+        let c = Point::new(1.0, 2.0);
+
+        assert_eq!(a.to_string(), "(1, 2)");
+        assert_eq!(b.to_string(), "(1, 2)");
+        assert_eq!(c.to_string(), "(1, 2)");
     }
 
     #[test]
     fn point_equality() {
-        let p1 = Point { x: 1, y: 2 };
-        let p2 = Point { x: 1, y: 2 };
-        let p3 = Point { x: 2, y: 2 };
-        let p4 = Point { x: 2, y: 1 };
+        let p1 = Point::new(1, 2);
+        let p2 = Point::new(1, 2);
+        let p3 = Point::new(2, 2);
+        let p4 = Point::new(2, 1);
 
         assert_eq!(p1, p2);
         assert_ne!(p1, p3);
@@ -219,11 +239,11 @@ mod tests {
 
     #[test]
     fn point_order() {
-        let p1 = Point { x: 1, y: 2 };
-        let p2 = Point { x: 2, y: 1 };
-        let p3 = Point { x: 1, y: 3 };
-        let p4 = Point { x: 1, y: 1 };
-        let p5 = Point { x: 0, y: 1 };
+        let p1 = Point::new(1, 2);
+        let p2 = Point::new(2, 1);
+        let p3 = Point::new(1, 3);
+        let p4 = Point::new(1, 1);
+        let p5 = Point::new(0, 1);
 
         assert!(p1 < p2);
         assert!(p1 < p3);
@@ -233,9 +253,9 @@ mod tests {
 
     #[test]
     fn point_add() {
-        let mut p1 = Point { x: 1, y: 2 };
-        let p2 = Point { x: 3, y: 4 };
-        let p3 = Point { x: 4, y: 6 };
+        let mut p1 = Point::new(1, 2 );
+        let p2 = Point::new(3, 4 );
+        let p3 = Point::new(4, 6 );
 
         assert_eq!(p1 + p2, p3);
         assert_eq!(p1 + p2, p2 + p1);
@@ -246,9 +266,9 @@ mod tests {
 
     #[test]
     fn point_subtract() {
-        let mut p1 = Point { x: 1, y: 2 };
-        let p2 = Point { x: 3, y: 4 };
-        let p3 = Point { x: -2, y: -2 };
+        let mut p1 = Point::new(1, 2 );
+        let p2 = Point::new(3, 4 );
+        let p3 = Point::new(-2, -2);
 
         assert_eq!(p1 - p2, p3);
         assert_ne!(p1 - p2, p2 - p1);
@@ -259,8 +279,8 @@ mod tests {
 
     #[test]
     fn point_multiply() {
-        let mut p1 = Point { x: 1, y: 2 };
-        let p2 = Point { x: 2, y: 4 };
+        let mut p1 = Point::new(1, 2);
+        let p2 = Point::new(2, 4);
         let n = 2;
 
         assert_eq!(p1 * n, p2);
@@ -271,8 +291,8 @@ mod tests {
 
     #[test]
     fn point_divide() {
-        let mut p1 = Point { x: 3, y: 9 };
-        let p2 = Point { x: 1, y: 3 };
+        let mut p1 = Point::new(3, 9);
+        let p2 = Point::new(1, 3);
         let n = 3;
 
         assert_eq!(p1 / n, p2);
@@ -283,8 +303,8 @@ mod tests {
 
     #[test]
     fn point_up() {
-        let mut p1 = Point { x: 1, y: 2 };
-        let up = Point { x: 0, y: -1 };
+        let mut p1 = Point::new(1, 2);
+        let up = Point::new(0, -1);
         let result = p1 + up;
 
         assert_eq!(p1.up(), result);
@@ -295,8 +315,8 @@ mod tests {
 
     #[test]
     fn point_down() {
-        let mut p1 = Point { x: 1, y: 2 };
-        let down = Point { x: 0, y: 1 };
+        let mut p1 = Point::new(1, 2);
+        let down = Point::new(0, 1);
         let result = p1 + down;
 
         assert_eq!(p1.down(), result);
@@ -307,8 +327,8 @@ mod tests {
 
     #[test]
     fn point_left() {
-        let mut p1 = Point { x: 1, y: 2 };
-        let left = Point { x: -1, y: 0 };
+        let mut p1 = Point::new(1, 2);
+        let left = Point::new(-1, 0);
         let result = p1 + left;
 
         assert_eq!(p1.left(), result);
@@ -319,8 +339,8 @@ mod tests {
 
     #[test]
     fn point_right() {
-        let mut p1 = Point { x: 1, y: 2 };
-        let right = Point { x: 1, y: 0 };
+        let mut p1 = Point::new(1, 2);
+        let right = Point::new(1, 0);
         let result = p1 + right;
 
         assert_eq!(p1.right(), result);
@@ -331,21 +351,39 @@ mod tests {
 
     #[test]
     fn point_manhattan() {
-        let p1 = Point { x: 1, y: 2 };
-        let p2 = Point { x: 3, y: 4 };
-        let p3 = Point { x: -3, y: -4 };
+        let p1 = Point::new(1, 2);
+        let p2 = Point::new(3, 4);
+        let p3 = Point::new(-3, -4);
 
         assert_eq!(manhattan(&p1, &p2), 4);
         assert_eq!(manhattan(&p1, &p3), 10);
     }
 
     #[test]
+    fn point_manhattan_unsigned() {
+        let p1 = Point::new(1u32, 2u32);
+        let p2 = Point::new(3u32, 4u32);
+
+        assert_eq!(manhattan_unsigned(&p1, &p2), 4);
+        assert_eq!(manhattan_unsigned(&p2, &p1), 4);
+    }
+
+    #[test]
     fn point_chebyshev() {
-        let p1 = Point { x: 1, y: 2 };
-        let p2 = Point { x: 3, y: 5 };
-        let p3 = Point { x: -3, y: -5 };
+        let p1 = Point::new(1, 2);
+        let p2 = Point::new(3, 5);
+        let p3 = Point::new(-3, -5);
 
         assert_eq!(chebyshev(&p1, &p2), 3);
         assert_eq!(chebyshev(&p1, &p3), 7);
+    }
+
+    #[test]
+    fn point_chebyshev_unsigned() {
+        let p1 = Point::new(1u32, 2u32);
+        let p2 = Point::new(3u32, 5u32);
+
+        assert_eq!(chebyshev_unsigned(&p1, &p2), 3);
+        assert_eq!(chebyshev_unsigned(&p2, &p1), 3);
     }
 }
