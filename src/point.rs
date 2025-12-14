@@ -163,19 +163,10 @@ where
 
 pub fn manhattan_unsigned<T>(lhs: &Point<T>, rhs: &Point<T>) -> T
 where
-    T: Sub<Output = T> + Add<Output = T> + Copy + Ord,
+    T: Sub<Output = T> + Add<Output = T> + Copy + Ord + Unsigned,
 {
-    let dx = if rhs.x > lhs.x {
-        rhs.x - lhs.x
-    } else {
-        lhs.x - rhs.x
-    };
-
-    let dy = if rhs.y > lhs.y {
-        rhs.y - lhs.y
-    } else {
-        lhs.y - rhs.y
-    };
+    let dx = if rhs.x > lhs.x { rhs.x - lhs.x } else { lhs.x - rhs.x };
+    let dy = if rhs.y > lhs.y { rhs.y - lhs.y } else { lhs.y - rhs.y };
 
     dx + dy
 }
@@ -189,19 +180,10 @@ where
 
 pub fn chebyshev_unsigned<T>(lhs: &Point<T>, rhs: &Point<T>) -> T
 where
-    T: Sub<Output = T> + Copy + Ord,
+    T: Sub<Output = T> + Copy + Ord + Unsigned,
 {
-    let dx = if rhs.x > lhs.x {
-        rhs.x - lhs.x
-    } else {
-        lhs.x - rhs.x
-    };
-
-    let dy = if rhs.y > lhs.y {
-        rhs.y - lhs.y
-    } else {
-        lhs.y - rhs.y
-    };
+    let dx = if rhs.x > lhs.x { rhs.x - lhs.x } else { lhs.x - rhs.x };
+    let dy = if rhs.y > lhs.y { rhs.y - lhs.y } else { lhs.y - rhs.y };
 
     max(dx, dy)
 }
@@ -253,9 +235,9 @@ mod tests {
 
     #[test]
     fn point_add() {
-        let mut p1 = Point::new(1, 2 );
-        let p2 = Point::new(3, 4 );
-        let p3 = Point::new(4, 6 );
+        let mut p1 = Point::new(1, 2);
+        let p2 = Point::new(3, 4);
+        let p3 = Point::new(4, 6);
 
         assert_eq!(p1 + p2, p3);
         assert_eq!(p1 + p2, p2 + p1);
@@ -266,8 +248,8 @@ mod tests {
 
     #[test]
     fn point_subtract() {
-        let mut p1 = Point::new(1, 2 );
-        let p2 = Point::new(3, 4 );
+        let mut p1 = Point::new(1, 2);
+        let p2 = Point::new(3, 4);
         let p3 = Point::new(-2, -2);
 
         assert_eq!(p1 - p2, p3);
